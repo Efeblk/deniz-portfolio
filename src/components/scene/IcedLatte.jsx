@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Hotspot from '../ui/Hotspot.jsx';
 import { C } from './palette.js';
 import { sfxSip, sfxPour } from '../../audio/engine.js';
+import { useScene } from '../../context/SceneContext.jsx';
 
 const FULL = 4;
 const LIQUID_MAX = 82; // px of liquid when full
@@ -18,8 +19,10 @@ const ICE = [
 export default function IcedLatte() {
   const [level, setLevel] = useState(FULL);
   const [bubbles, setBubbles] = useState([]);
+  const { activateProp } = useScene();
 
   const onSip = () => {
+    activateProp('latte');
     const text = level > 0 ? (level === 1 ? 'last sip…' : 'sip~') : 'refill!';
     if (level > 0) { sfxSip(); setLevel((l) => l - 1); }
     else { sfxPour(); setLevel(FULL); }

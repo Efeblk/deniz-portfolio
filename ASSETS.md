@@ -38,6 +38,7 @@ Split these further into parts so code can move them:
 - **girl/** `body`, `head`, `eyes-open`, `eyes-down`, `eyes-closed`, `headphones`, `hair-front`
 - **cat/** `body`, `tail` (pivot at base), `head` (pivot at neck), `paw` (pivot at shoulder), `pupil`
 - **latte/** `cup-back`, `liquid` (masked to cup), `ice-1..3`, `cup-front` (gloss + outline), `straw`
+- **yarn/** `ball` (rotates around its centre), `strand` (does not rotate)
 - **lantern/** `lantern-off`, `lantern-on`, `glow` (screen blend)
 
 ## 3. Painting the cel look

@@ -5,9 +5,9 @@ import { sfxPaper } from '../../audio/engine.js';
 
 // A clipped stack of pages (the CV) leaning on the backrest.
 export default function Papers() {
-  const { openModal } = useScene();
+  const { activateProp } = useScene();
   return (
-    <Hotspot label="Papers — CV" onActivate={() => { sfxPaper(); openModal('cv'); }} hitArea={{ x: 990, y: 540, width: 96, height: 108 }}>
+    <Hotspot label="Papers — CV" onActivate={() => { sfxPaper(); activateProp('papers', 'cv'); }} hitArea={{ x: 990, y: 540, width: 96, height: 108 }}>
       <g stroke={C.ink} strokeLinejoin="round">
         <path d="M1002 644 L1080 644 L1084 560 L1010 556Z" fill={C.paperShade} strokeWidth="2.5" transform="rotate(5 1040 644)" />
         <path d="M998 644 L1076 644 L1078 558 L1004 556Z" fill="#efeadb" strokeWidth="2.5" transform="rotate(-3 1040 644)" />

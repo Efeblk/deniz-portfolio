@@ -4,10 +4,10 @@ import { useScene } from '../../context/SceneContext.jsx';
 
 // Tablet propped on a little stand beside her, screen angled toward her.
 export default function Tablet() {
-  const { openModal, night } = useScene();
+  const { activateProp, night } = useScene();
   const screen = night ? '#bfe9ff' : '#9fd3dc';
   return (
-    <Hotspot label="Tablet — Projects" onActivate={() => openModal('projects')} hitArea={{ x: 880, y: 556, width: 104, height: 92 }}>
+    <Hotspot label="Tablet — Projects" onActivate={() => activateProp('tablet', 'projects')} hitArea={{ x: 880, y: 556, width: 104, height: 92 }}>
       <g transform="rotate(-7 930 640)" stroke={C.ink} strokeLinejoin="round">
         <path d="M948 642 L968 600 L978 642Z" fill="#59646a" strokeWidth="2.5" />
         <path d="M888 642 L972 642 L962 568 L896 566Z" fill="#2f3c43" strokeWidth="3" />

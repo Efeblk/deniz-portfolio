@@ -6,31 +6,44 @@ import { useScene } from '../../context/SceneContext.jsx';
 
 const ink = { stroke: C.ink, strokeWidth: 3, strokeLinejoin: 'round', strokeLinecap: 'round' };
 
-function Eye({ x, lookUp, blink }) {
-  // lookUp: glance at the visitor; otherwise eyes are lowered to the book
-  const irisY = lookUp ? -1 : 2.6;
+// Eye centres on the stage (head origin is translate(800 640), eyes at y −214).
+const EYE_STAGE = { x: 800, y: 426 };
+
+function Eye({ x, lookUp, blink, gaze }) {
+  // Three gaze modes: reading (eyes lowered to the book), looking up at the
+  // visitor, or a quick glance toward a clicked prop (`gaze` = unit vector).
+  let ix = 0;
+  let iy = lookUp ? -1 : 2.6;
+  let lid = lookUp ? -5 : 0;
+  let lash = lookUp ? -3.5 : 1.2;
+  if (gaze) {
+    ix = gaze.dx * 5.2;
+    iy = Math.max(-1.5, Math.min(3, gaze.dy * 3.4));
+    lid = -4.5;
+    lash = -3;
+  }
+  const spring = { type: 'spring', stiffness: 420, damping: 24 };
   return (
     <g transform={`translate(${x} -214)`}>
       <motion.g animate={{ scaleY: blink ? 0.08 : 1 }} transition={{ duration: 0.08 }} style={{ originY: 0.5 }}>
+        <defs>
+          <clipPath id={`eye-clip-${x}`}><path d="M-10 0 Q0 -7 10 0 Q0 6.5 -10 0Z" /></clipPath>
+        </defs>
         <path d="M-10 0 Q0 -7 10 0 Q0 6.5 -10 0Z" fill="#fffdf6" />
-        <motion.g animate={{ y: irisY }} transition={{ type: 'spring', stiffness: 160, damping: 16 }}>
-          <circle r="5.4" fill={C.eye} />
-          <path d="M-5.4 0 A5.4 5.4 0 0 1 5.4 0Z" fill={C.eyeDark} />
-          <circle r="2.3" fill="#132b22" />
-          <circle cx="-1.8" cy="-1.8" r="1.4" fill="#fff" />
-        </motion.g>
-        {/* lowered upper lid when reading */}
-        <motion.path
-          d="M-11 0 Q0 -8 11 -0.5 L11 -9 L-11 -9Z"
-          fill={C.skin}
-          animate={{ y: lookUp ? -5 : 0 }}
-          transition={{ type: 'spring', stiffness: 160, damping: 16 }}
-        />
+        <g clipPath={`url(#eye-clip-${x})`}>
+          <motion.g animate={{ x: ix, y: iy }} transition={spring}>
+            <circle r="5.4" fill={C.eye} />
+            <path d="M-5.4 0 A5.4 5.4 0 0 1 5.4 0Z" fill={C.eyeDark} />
+            <circle r="2.3" fill="#132b22" />
+            <circle cx="-1.8" cy="-1.8" r="1.4" fill="#fff" />
+          </motion.g>
+        </g>
+        {/* upper lid: lowered while reading, lifted when glancing */}
+        <motion.path d="M-11 0 Q0 -8 11 -0.5 L11 -9 L-11 -9Z" fill={C.skin} animate={{ y: lid }} transition={spring} />
         <motion.path
           d="M-11.5 0.5 Q0 -8 11.5 -0.5"
           fill="none" stroke={C.ink} strokeWidth="2.8" strokeLinecap="round"
-          animate={{ y: lookUp ? -3.5 : 1.2 }}
-          transition={{ type: 'spring', stiffness: 160, damping: 16 }}
+          animate={{ y: lash }} transition={spring}
         />
       </motion.g>
     </g>
@@ -38,7 +51,7 @@ function Eye({ x, lookUp, blink }) {
 }
 
 export default function Girl({ onHeadphones }) {
-  const { musicOn, night } = useScene();
+  const { musicOn, musicPlaying, gaze } = useScene();
   const [blink, setBlink] = useState(false);
   const [lookUp, setLookUp] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -69,6 +82,16 @@ export default function Girl({ onHeadphones }) {
   }, []);
 
   const looking = lookUp || hovered;
+  // unit vector from her eyes to the clicked prop
+  const glance = gaze
+    ? (() => {
+        const dx = gaze.x - EYE_STAGE.x;
+        const dy = gaze.y - EYE_STAGE.y;
+        const len = Math.hypot(dx, dy) || 1;
+        return { dx: dx / len, dy: dy / len };
+      })()
+    : null;
+  const headTilt = glance ? glance.dx * 5 : looking ? 0 : -2;
 
   return (
     <g transform="translate(800 640)" className="girl">
@@ -106,23 +129,24 @@ export default function Girl({ onHeadphones }) {
           {/* head — tilts toward the book, bobs to the music */}
           <motion.g
             style={{ originX: 0.5, originY: 1 }}
-            animate={musicOn ? { rotate: [-3, 2, -3] } : { rotate: looking ? 0 : -2 }}
-            transition={musicOn ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.6 }}
+            animate={musicPlaying && !glance ? { rotate: [-3, 2, -3] } : { rotate: headTilt }}
+            transition={musicPlaying && !glance ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : { type: 'spring', stiffness: 200, damping: 18 }}
           >
             <path d="M-33 -236 Q-35 -200 -22 -188 Q-10 -176 0 -176 Q10 -176 22 -188 Q35 -200 33 -236 Q0 -262 -33 -236Z" fill={C.skin} {...ink} />
             <ellipse cx="-21" cy="-199" rx="6" ry="3" fill={C.blush} opacity="0.75" />
             <ellipse cx="21" cy="-199" rx="6" ry="3" fill={C.blush} opacity="0.75" />
-            <Eye x={-14} lookUp={looking} blink={blink} />
-            <Eye x={14} lookUp={looking} blink={blink} />
+            <Eye x={-14} lookUp={looking} blink={blink && !glance} gaze={glance} />
+            <Eye x={14} lookUp={looking} blink={blink && !glance} gaze={glance} />
             <path d="M-23 -227 Q-15 -232 -6 -228 M6 -228 Q15 -232 23 -227" stroke={C.hairDark} strokeWidth="2.6" fill="none" strokeLinecap="round" />
             <path d="M1 -206 Q3 -201 -0.5 -199" stroke={C.skinShade} strokeWidth="2" fill="none" strokeLinecap="round" />
             <motion.path
-              d={looking ? 'M-5 -191 Q0 -186 5 -191' : 'M-4 -190 Q0 -188 4 -190'}
+              d={looking || glance ? 'M-5 -191 Q0 -186 5 -191' : 'M-4 -190 Q0 -188 4 -190'}
               stroke="#a5554d" strokeWidth="2.2" fill="none" strokeLinecap="round"
             />
-            {/* bangs */}
-            <path d="M-38 -230 Q-42 -264 -8 -270 Q32 -272 40 -232 L34 -220 L29 -233 L21 -219 L13 -235 L3 -221 L-6 -237 L-15 -221 L-22 -235 L-31 -220Z" fill={C.hair} {...ink} />
-            <path d="M-26 -254 Q-2 -264 22 -255" stroke={C.hairLight} strokeWidth="4.5" fill="none" strokeLinecap="round" />
+            {/* hair cap — centre parting, no fringe: the forehead stays visible */}
+            <path d="M-38 -224 Q-43 -266 0 -272 Q43 -266 38 -224 Q35 -240 22 -247 Q10 -252 2 -250 L0 -245 L-2 -250 Q-10 -252 -22 -247 Q-35 -240 -38 -224Z" fill={C.hair} {...ink} />
+            <path d="M0 -271 L0 -247" stroke={C.hairDark} strokeWidth="2" strokeLinecap="round" />
+            <path d="M-29 -258 Q-17 -266 -6 -265 M6 -265 Q17 -266 29 -258" stroke={C.hairLight} strokeWidth="4" fill="none" strokeLinecap="round" />
             {/* long locks falling over the shoulders */}
             <path d="M-37 -238 Q-48 -192 -46 -150 Q-44 -118 -56 -92 Q-36 -94 -30 -128 Q-24 -172 -26 -214Z" fill={C.hair} {...ink} />
             <path d="M37 -238 Q48 -192 46 -150 Q44 -118 56 -92 Q36 -94 30 -128 Q24 -172 26 -214Z" fill={C.hair} {...ink} />
@@ -137,7 +161,7 @@ export default function Girl({ onHeadphones }) {
                   <rect x="-12" y="-27" width="24" height="54" rx="12" fill={C.cream} {...ink} />
                   <rect x={side < 0 ? -12 : 2} y="-22" width="10" height="44" rx="5" fill={C.creamShade} />
                   <rect x="-6" y="-17" width="12" height="34" rx="6" fill={C.orange} {...ink} strokeWidth="2.2" />
-                  {musicOn && <circle r="2.5" cy="-8" fill="#7ef0b5" />}
+                  {musicPlaying && <circle r="2.5" cy="-8" fill="#7ef0b5" />}
                 </g>
               ))}
             </Hotspot>

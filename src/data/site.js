@@ -2,7 +2,7 @@
 export const SITE = {
   name: 'Elif Deniz Gölboyu',
   shortName: 'Elif Deniz',
-  role: 'Software Developer',
+  role: 'Computer / Biomedical Engineer',
   email: 'elifdenizgolboyu@gmail.com',
   github: 'https://github.com/tojifushiguroed',
   githubUser: 'tojifushiguroed',
@@ -10,17 +10,12 @@ export const SITE = {
   cvPdf: '/cv/Elif_Deniz_Golboyu_CV.pdf',
 };
 
-// Drop your licensed audio files into /public/audio with these names.
-// If a file is missing, a built-in original synth track plays instead.
+// The headphones play this file from /public. By day it plays as-is; at night
+// the same track is routed through a lo-fi chain (low-pass, slower tape speed,
+// vinyl crackle). If the file is missing, an original synth tune plays instead.
 export const MUSIC = {
-  day: {
-    src: '/audio/day-theme.mp3',
-    title: 'Day theme',
-    note: 'Place your licensed “Merry-Go-Round of Life” file here',
-  },
-  night: {
-    src: '/audio/night-lofi.mp3',
-    title: 'Night lo-fi',
-    note: 'Place a lo-fi / night arrangement here',
-  },
+  src: '/howls_moving_castle.mp3',
+  title: "Howl's Moving Castle",
+  volume: 0.7,
+  night: { lowpassHz: 1500, playbackRate: 0.93, crackle: 0.22 },
 };

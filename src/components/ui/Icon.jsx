@@ -14,6 +14,9 @@ const P = {
   download: <><path d="M12 3v12M7 10l5 5 5-5" /><path d="M4 20h16" /></>,
   send: <><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4z" /></>,
   external: <><path d="M14 3h7v7M21 3l-9 9" /><path d="M19 14v6H4V5h6" /></>,
+  arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+  back: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  code: <path d="M8 7l-5 5 5 5M16 7l5 5-5 5" />,
   star: <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" />,
 };
 

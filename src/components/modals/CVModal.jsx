@@ -39,7 +39,7 @@ export default function CVModal({ onClose }) {
         <div className="cv-top">
           <div>
             <h3 className="cv-name">{SITE.name}</h3>
-            <p className="cv-headline">{CV.headline} · {CV.location}</p>
+            <p className="cv-headline">{[CV.headline, CV.location].filter(Boolean).join(' · ')}</p>
           </div>
           <div className="cv-links">
             <a href={SITE.github} target="_blank" rel="noreferrer">github.com/{SITE.githubUser}</a>
@@ -51,15 +51,16 @@ export default function CVModal({ onClose }) {
         <h4>Experience</h4>
         {CV.experience.map((e) => (
           <div key={e.role + e.org} className="cv-item">
-            <div className="cv-row"><b>{e.role}</b> — {e.org}<span className="cv-period">{e.period}</span></div>
-            <ul>{e.points.map((pt) => <li key={pt}>{pt}</li>)}</ul>
+            <div className="cv-row"><b>{e.role}</b> — {e.org}{e.period && <span className="cv-period">{e.period}</span>}</div>
+            {e.points.length > 0 && <ul>{e.points.map((pt) => <li key={pt}>{pt}</li>)}</ul>}
           </div>
         ))}
 
         <h4>Education</h4>
         {CV.education.map((e) => (
           <div key={e.degree} className="cv-item">
-            <div className="cv-row"><b>{e.degree}</b> — {e.org}<span className="cv-period">{e.period}</span></div>
+            <div className="cv-row"><b>{e.degree}</b> — {e.org}{e.period && <span className="cv-period">{e.period}</span>}</div>
+            {e.note && <p className="cv-note">{e.note}</p>}
           </div>
         ))}
 
@@ -70,8 +71,12 @@ export default function CVModal({ onClose }) {
           ))}
         </div>
 
-        <h4>Languages</h4>
-        <p>{CV.languages.join(' · ')}</p>
+        {CV.languages.length > 0 && (
+          <>
+            <h4>Languages</h4>
+            <p>{CV.languages.join(' · ')}</p>
+          </>
+        )}
       </div>
     </Modal>
   );

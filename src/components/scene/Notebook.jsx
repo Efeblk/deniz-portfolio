@@ -5,9 +5,9 @@ import { sfxThump } from '../../audio/engine.js';
 
 // Coral notebook with an elastic band, a pen, and a "say hi!" sticky note.
 export default function Notebook() {
-  const { openModal } = useScene();
+  const { activateProp } = useScene();
   return (
-    <Hotspot label="Notebook — Contact me" onActivate={() => { sfxThump(); openModal('contact'); }} hitArea={{ x: 1120, y: 648, width: 104, height: 66 }}>
+    <Hotspot label="Notebook — Contact me" onActivate={() => { sfxThump(); activateProp('notebook', 'contact'); }} hitArea={{ x: 1120, y: 648, width: 104, height: 66 }}>
       <g stroke={C.ink} strokeLinejoin="round">
         {/* sticky note peeking out */}
         <g transform="rotate(-10 1160 690)">

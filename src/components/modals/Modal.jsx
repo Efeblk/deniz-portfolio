@@ -5,20 +5,21 @@ import { sfxPop } from '../../audio/engine.js';
 
 // Shared modal shell. `variant` skins it as the object it came from:
 // 'tablet' (dark bezel), 'paper' (CV sheet), 'notebook' (ruled + spiral).
-export default function Modal({ title, variant = 'paper', onClose, children, footer }) {
+export default function Modal({ title, variant = 'paper', onClose, onEscape, children, footer, bodyRef }) {
   const closeRef = useRef(null);
   const lastFocus = useRef(null);
 
   useEffect(() => {
     lastFocus.current = document.activeElement;
     closeRef.current?.focus({ preventScroll: true });
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    return () => lastFocus.current?.focus?.({ preventScroll: true });
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && (onEscape || onClose)();
     window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      lastFocus.current?.focus?.({ preventScroll: true });
-    };
-  }, [onClose]);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose, onEscape]);
 
   return (
     <motion.div
@@ -45,7 +46,7 @@ export default function Modal({ title, variant = 'paper', onClose, children, foo
         <header className="modal-head">
           <h2>{title}</h2>
         </header>
-        <div className="modal-body">{children}</div>
+        <div className="modal-body" ref={bodyRef}>{children}</div>
         {footer && <footer className="modal-actions">{footer}</footer>}
       </motion.section>
     </motion.div>

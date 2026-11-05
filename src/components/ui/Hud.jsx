@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Icon from './Icon.jsx';
 import { useScene } from '../../context/SceneContext.jsx';
 import { SITE } from '../../data/site.js';
+import { music } from '../../audio/MusicPlayer.js';
 
 function SquareBtn({ icon, label, onClick, active }) {
   return (
@@ -28,7 +29,7 @@ const GUIDE = [
 // Corner UI in the style of the reference shots: chunky white squares
 // with an ink outline and a hard offset shadow.
 export default function Hud() {
-  const { night, toggleNight, musicOn, toggleMusic, openModal } = useScene();
+  const { night, toggleNight, musicOn, musicState, toggleMusic, openModal } = useScene();
   const [open, setOpen] = useState(false);
 
   return (
@@ -57,11 +58,20 @@ export default function Hud() {
               ))}
               <button className="guide-row" onClick={toggleMusic}><Icon name="note" size={18} /> <b>Headphones</b> <span>{musicOn ? 'Pause' : 'Play'} music</span></button>
               <button className="guide-row" onClick={toggleNight}><Icon name={night ? 'sun' : 'moon'} size={18} /> <b>Lantern</b> <span>{night ? 'Day' : 'Night'} mode</span></button>
-              <p className="guide-foot">The latte has 4 sips. The cat watches your cursor — wiggle it fast.</p>
+              <p className="guide-foot">The latte has 4 sips. Drag the ball of yarn and the cat will chase it — or wiggle your mouse fast.</p>
             </motion.nav>
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {musicState.notice && (
+          <motion.div className="toast" role="status" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}>
+            <Icon name="note" size={18} /> {musicState.notice}
+            <button onClick={() => music.clearNotice()} aria-label="Dismiss"><Icon name="close" size={16} /></button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="hud-bottom">
         <SquareBtn icon={musicOn ? 'note' : 'mute'} label={musicOn ? 'Pause music' : 'Play music'} onClick={toggleMusic} active={musicOn} />

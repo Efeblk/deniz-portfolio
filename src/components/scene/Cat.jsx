@@ -7,9 +7,11 @@ import { sfxWhoosh, sfxPop } from '../../audio/engine.js';
 
 const ink = { stroke: C.ink, strokeWidth: 3, strokeLinejoin: 'round', strokeLinecap: 'round' };
 
-// Orange tabby sitting by the tree. Head + pupils follow the cursor;
-// a fast back-and-forth wiggle of the mouse triggers a paw swipe.
-export default function Cat({ pointer, x = 545, y = 800 }) {
+// Orange tabby. Watches the cursor; once you touch the ball of yarn it trots
+// over (little hops), faces it and bats it around. Still loves being petted.
+// Position / hop / focus come from useYarnPlay as motion values.
+export default function Cat({ pointer, play, groundY = 800 }) {
+  const { cat, yarn, stageToClient } = play;
   const headRef = useRef(null);
   const rot = useMotionValue(0);
   const px = useMotionValue(0);
@@ -17,11 +19,15 @@ export default function Cat({ pointer, x = 545, y = 800 }) {
   const headRot = useSpring(rot, { stiffness: 120, damping: 14 });
   const pupilX = useSpring(px, { stiffness: 300, damping: 20 });
   const pupilY = useSpring(py, { stiffness: 300, damping: 20 });
-  const [swipe, setSwipe] = useState(0);
+  const [shake, setShake] = useState(0);
   const [hearts, setHearts] = useState([]);
+  const facingRef = useRef(cat.facing);
+  facingRef.current = cat.facing;
+  const swipe = shake + cat.bat; // shake-swipes and yarn-bats share one paw animation
 
+  // Look at the yarn while playing, otherwise at the cursor.
   useEffect(() => {
-    if (!pointer) return;
+    if (!pointer) return undefined;
     let raf = 0;
     const update = () => {
       raf = 0;
@@ -30,24 +36,29 @@ export default function Cat({ pointer, x = 545, y = 800 }) {
       const b = el.getBoundingClientRect();
       const cx = b.left + b.width / 2;
       const cy = b.top + b.height / 2;
-      const dx = pointer.x.get() - cx;
-      const dy = pointer.y.get() - cy;
+      const target = cat.focus.get() > 0.5
+        ? stageToClient(yarn.x.get(), yarn.y.get())
+        : { x: pointer.x.get(), y: pointer.y.get() };
+      const dx = (target.x - cx) * facingRef.current; // local (possibly mirrored) space
+      const dy = target.y - cy;
       const dist = Math.hypot(dx, dy) || 1;
-      const reach = Math.min(1, dist / 260);
-      rot.set(Math.max(-18, Math.min(18, (dx / dist) * 18 * reach)));
+      const reach = Math.min(1, dist / 220);
+      rot.set(Math.max(-20, Math.min(20, (dx / dist) * 20 * reach)));
       px.set((dx / dist) * 3.6 * reach);
       py.set((dy / dist) * 3.2 * reach);
     };
     const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
-    const u1 = pointer.x.on('change', schedule);
-    const u2 = pointer.y.on('change', schedule);
-    return () => { u1(); u2(); cancelAnimationFrame(raf); };
-  }, [pointer, rot, px, py]);
+    const subs = [pointer.x, pointer.y, yarn.x, yarn.y, cat.x, cat.focus].map((mv) => mv.on('change', schedule));
+    schedule();
+    return () => { subs.forEach((u) => u()); cancelAnimationFrame(raf); };
+  }, [pointer, yarn, cat, stageToClient, rot, px, py]);
 
   useShakeDetector(() => {
     sfxWhoosh();
-    setSwipe((s) => s + 1);
+    setShake((s) => s + 1);
   });
+
+  useEffect(() => { if (cat.bat) sfxWhoosh(); }, [cat.bat]);
 
   const pet = () => {
     sfxPop();
@@ -57,9 +68,11 @@ export default function Cat({ pointer, x = 545, y = 800 }) {
   };
 
   return (
-    <g transform={`translate(${x} ${y})`}>
-      <ellipse cx="6" cy="2" rx="58" ry="10" fill={C.grassDeep} opacity="0.6" />
-      <Hotspot label="Cat — pet me (or wiggle your mouse fast!)" onActivate={pet} lift={2} hitArea={{ x: -50, y: -185, width: 130, height: 190 }}>
+    <g transform={`translate(0 ${groundY})`}>
+      <motion.ellipse cx={cat.x} cy="2" rx="58" ry="10" fill={C.grassDeep} opacity="0.6" />
+      <motion.g style={{ x: cat.x, y: cat.hop }}>
+      <g transform={`scale(${cat.facing} 1)`}>
+      <Hotspot label="Cat — pet me (or throw the yarn!)" onActivate={pet} lift={2} hitArea={{ x: -50, y: -185, width: 130, height: 190 }}>
         {/* tail */}
         <motion.g style={{ originX: 0, originY: 1 }} animate={{ rotate: [0, 12, -4, 0] }} transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}>
           <path d="M22 -8 Q72 -8 68 -52 Q64 -84 44 -88" fill="none" stroke={C.ink} strokeWidth="17" strokeLinecap="round" />
@@ -118,6 +131,7 @@ export default function Cat({ pointer, x = 545, y = 800 }) {
           <path d="M-18 -104 L-40 -108 M-18 -100 L-40 -98 M18 -104 L40 -108 M18 -100 L40 -98" stroke={C.ink} strokeWidth="1.5" opacity="0.75" />
         </motion.g>
       </Hotspot>
+      </g>
 
       <AnimatePresence>
         {hearts.map((id) => (
@@ -133,6 +147,7 @@ export default function Cat({ pointer, x = 545, y = 800 }) {
           />
         ))}
       </AnimatePresence>
+      </motion.g>
     </g>
   );
 }
